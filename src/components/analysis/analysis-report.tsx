@@ -54,6 +54,12 @@ function ScoreBar({ label, value }: { label: string; value: number | null }) {
 export function AnalysisReport({ episodeId, clips, longformNotes, summary }: AnalysisReportProps) {
   const sortedClips = [...clips].sort((a, b) => (b.overallScore ?? 0) - (a.overallScore ?? 0));
 
+  // Stats
+  const avgScore = clips.length > 0
+    ? (clips.reduce((sum, c) => sum + (c.overallScore ?? 0), 0) / clips.length).toFixed(1)
+    : "0";
+  const topScoreClips = clips.filter(c => (c.overallScore ?? 0) >= 8).length;
+
   return (
     <div className="space-y-5">
       {/* Summary */}
@@ -64,18 +70,44 @@ export function AnalysisReport({ episodeId, clips, longformNotes, summary }: Ana
         </div>
       )}
 
+      {/* Stats bar */}
+      <div className="flex items-center gap-6 px-1">
+        <div className="text-center">
+          <p className="text-2xl font-bold text-violet-600">{clips.length}</p>
+          <p className="text-[11px] text-slate-400">Total Clips</p>
+        </div>
+        <div className="h-8 w-px bg-slate-100" />
+        <div className="text-center">
+          <p className="text-2xl font-bold text-violet-600">{avgScore}</p>
+          <p className="text-[11px] text-slate-400">Avg Score</p>
+        </div>
+        <div className="h-8 w-px bg-slate-100" />
+        <div className="text-center">
+          <p className="text-2xl font-bold text-emerald-600">{topScoreClips}</p>
+          <p className="text-[11px] text-slate-400">Score 8+</p>
+        </div>
+        <div className="h-8 w-px bg-slate-100" />
+        <div className="text-center">
+          <p className="text-2xl font-bold text-slate-700">{longformNotes.chapters.length}</p>
+          <p className="text-[11px] text-slate-400">Chapters</p>
+        </div>
+      </div>
+
       {/* Clip Recommendations */}
       <div className="bg-white rounded-xl border border-slate-100 shadow-sm shadow-slate-50">
-        <div className="px-5 py-4 border-b border-slate-100">
-          <h3 className="text-sm font-semibold text-slate-900">Clip Recommendations ({sortedClips.length})</h3>
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-900">All Clips ({sortedClips.length})</h3>
+          <span className="text-[11px] text-slate-400">Sorted by score — highest first</span>
         </div>
-        <ScrollArea className="h-[500px]">
+        <ScrollArea className="h-[600px]">
           <div className="p-4 space-y-3">
             {sortedClips.map((clip, index) => (
               <div key={clip.id} className="rounded-lg border border-slate-100 hover:border-violet-100 transition-colors p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3">
-                    <span className="text-lg font-bold text-violet-300 leading-none mt-0.5">#{index + 1}</span>
+                    <span className={`text-lg font-bold leading-none mt-0.5 ${
+                      index < 3 ? "text-violet-400" : "text-slate-200"
+                    }`}>#{index + 1}</span>
                     <div>
                       <h4 className="font-medium text-sm text-slate-800">{clip.title}</h4>
                       <span className="text-[11px] text-slate-400">
@@ -120,10 +152,10 @@ export function AnalysisReport({ episodeId, clips, longformNotes, summary }: Ana
                   <a
                     href={`/api/episodes/${episodeId}/export?format=clip-srt&clipId=${clip.id}`}
                     download
-                    className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-violet-600 hover:bg-violet-50 transition-colors"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-violet-600 hover:bg-violet-50 border border-transparent hover:border-violet-200 transition-all"
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                    SRT
+                    Download SRT
                   </a>
                 </div>
               </div>

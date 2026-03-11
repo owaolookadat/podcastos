@@ -11,6 +11,18 @@ import {
 } from "@/lib/services/export.service";
 import type { WhisperSegment, LongformNotes } from "@/lib/types";
 
+/**
+ * Build Content-Disposition header that works with non-ASCII (Chinese, etc.) filenames.
+ * Uses RFC 5987 filename*=UTF-8'' encoding with an ASCII fallback.
+ */
+function contentDisposition(filename: string): string {
+  // ASCII-only fallback: strip non-ASCII characters
+  const asciiFallback = filename.replace(/[^\x20-\x7E]/g, "_").replace(/_+/g, "_");
+  // UTF-8 encoded version for modern browsers
+  const utf8Encoded = encodeURIComponent(filename).replace(/['()]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${utf8Encoded}`;
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -42,7 +54,7 @@ export async function GET(
     return new Response(srt, {
       headers: {
         "Content-Type": "application/x-subrip",
-        "Content-Disposition": `attachment; filename="${safeTitle}.srt"`,
+        "Content-Disposition": contentDisposition(`${safeTitle}.srt`),
       },
     });
   }
@@ -62,7 +74,7 @@ export async function GET(
     return new Response(srt, {
       headers: {
         "Content-Type": "application/x-subrip",
-        "Content-Disposition": `attachment; filename="${clipTitle}.srt"`,
+        "Content-Disposition": contentDisposition(`${clipTitle}.srt`),
       },
     });
   }
@@ -85,7 +97,7 @@ export async function GET(
     return new Response(edl, {
       headers: {
         "Content-Type": "text/plain",
-        "Content-Disposition": `attachment; filename="${safeTitle} - Longform Edit.edl"`,
+        "Content-Disposition": contentDisposition(`${safeTitle} - Longform Edit.edl`),
       },
     });
   }
@@ -107,7 +119,7 @@ export async function GET(
     return new Response(edl, {
       headers: {
         "Content-Type": "text/plain",
-        "Content-Disposition": `attachment; filename="${safeTitle} - Clips.edl"`,
+        "Content-Disposition": contentDisposition(`${safeTitle} - Clips.edl`),
       },
     });
   }
@@ -125,7 +137,7 @@ export async function GET(
     return new Response(chapters, {
       headers: {
         "Content-Type": "text/plain",
-        "Content-Disposition": `attachment; filename="${safeTitle} - Chapters.txt"`,
+        "Content-Disposition": contentDisposition(`${safeTitle} - Chapters.txt`),
       },
     });
   }
