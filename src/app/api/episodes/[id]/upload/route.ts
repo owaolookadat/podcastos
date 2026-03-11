@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 import { episodes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getConfig } from "@/lib/config";
-import { extractAudio } from "@/lib/services/ffmpeg.service";
+import { runFullPipeline } from "@/lib/services/pipeline.service";
 
 export async function POST(
   req: Request,
@@ -21,7 +21,8 @@ export async function POST(
   }
 
   const contentRange = req.headers.get("Content-Range");
-  const filename = req.headers.get("X-Filename") || episode.originalFilename;
+  const rawFilename = req.headers.get("X-Filename") || episode.originalFilename;
+  const filename = decodeURIComponent(rawFilename);
   const ext = path.extname(filename) || ".mp4";
   const filePath = path.join(config.dataDir, "uploads", `${id}${ext}`);
 
@@ -61,9 +62,9 @@ export async function POST(
         .where(eq(episodes.id, id))
         .run();
 
-      // Start audio extraction in the background
-      extractAudio(id, filePath).catch((err) => {
-        console.error("Audio extraction failed:", err);
+      // Start full pipeline in the background (extract → transcribe → analyze)
+      runFullPipeline(id, filePath).catch((err) => {
+        console.error("Pipeline failed:", err);
       });
     }
 
@@ -86,8 +87,8 @@ export async function POST(
       .where(eq(episodes.id, id))
       .run();
 
-    extractAudio(id, filePath).catch((err) => {
-      console.error("Audio extraction failed:", err);
+    runFullPipeline(id, filePath).catch((err) => {
+      console.error("Pipeline failed:", err);
     });
 
     return NextResponse.json({

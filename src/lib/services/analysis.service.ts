@@ -53,11 +53,11 @@ export async function analyzeEpisode(episodeId: string): Promise<void> {
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 8192,
+      max_tokens: 16384,
       messages: [
         {
           role: "user",
-          content: buildClipAnalysisPrompt(formattedTranscript, episode.title),
+          content: buildClipAnalysisPrompt(formattedTranscript, episode.title, episode.durationSeconds ?? undefined),
         },
       ],
     });
@@ -81,6 +81,10 @@ export async function analyzeEpisode(episodeId: string): Promise<void> {
     }
 
     jobManager.updateProgress(jobId, 0.9, "Saving analysis...");
+
+    // Clean up previous analysis and clips (for re-analysis)
+    db.delete(clips).where(eq(clips.episodeId, episodeId)).run();
+    db.delete(analyses).where(eq(analyses.episodeId, episodeId)).run();
 
     // Save analysis
     const analysisId = nanoid();

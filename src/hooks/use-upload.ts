@@ -34,7 +34,7 @@ export function useUpload() {
             "Content-Range": `bytes ${start}-${end - 1}/${file.size}`,
             "X-Chunk-Index": String(i),
             "X-Total-Chunks": String(totalChunks),
-            "X-Filename": file.name,
+            "X-Filename": encodeURIComponent(file.name),
           },
           body: chunk,
         });
