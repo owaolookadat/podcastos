@@ -115,7 +115,11 @@ export default function DashboardPage() {
               <p className="text-[11px] text-slate-400 -mt-0.5">AI post-production</p>
             </div>
           </div>
-          {episodes.length > 0 && (
+          <div className="flex items-center gap-3">
+            <Link href="/guide" className="text-sm text-slate-400 hover:text-violet-600 transition-colors">
+              Guide
+            </Link>
+            {episodes.length > 0 && (
             <Button
               onClick={() => setDialogOpen(true)}
               className="bg-violet-600 hover:bg-violet-700 text-white shadow-sm shadow-violet-200 rounded-lg text-sm h-9 px-4"
@@ -125,7 +129,8 @@ export default function DashboardPage() {
               </svg>
               New Episode
             </Button>
-          )}
+            )}
+          </div>
         </div>
       </header>
 
@@ -239,7 +244,7 @@ export default function DashboardPage() {
               </svg>
               Upload Your First Episode
             </Button>
-            <p className="text-xs text-slate-400 mt-3">Supports MP4, MOV, MKV, MP3, WAV — up to 5GB</p>
+            <p className="text-xs text-slate-400 mt-3">Supports MP4, MOV, MKV, MP3, WAV</p>
           </div>
         ) : (
           /* ─── Episode List ─── */
