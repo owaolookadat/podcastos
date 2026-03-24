@@ -73,11 +73,27 @@ export async function analyzeEpisode(episodeId: string): Promise<void> {
 
     let analysisResult: AnalysisResult;
     try {
+      // Try direct parse first
       analysisResult = analysisResultSchema.parse(JSON.parse(jsonMatch[0]));
-    } catch (parseError) {
-      throw new Error(
-        `Failed to parse analysis: ${parseError instanceof Error ? parseError.message : "Invalid format"}`
-      );
+    } catch {
+      // Attempt to repair common JSON issues from LLM output
+      try {
+        let repaired = jsonMatch[0];
+        // Remove trailing commas before } or ]
+        repaired = repaired.replace(/,\s*([}\]])/g, "$1");
+        // Fix unescaped newlines inside strings
+        repaired = repaired.replace(/(?<=:\s*"[^"]*)\n(?=[^"]*")/g, "\\n");
+        // Fix unescaped control characters
+        repaired = repaired.replace(/[\x00-\x1f]/g, (ch) => {
+          if (ch === "\n" || ch === "\r" || ch === "\t") return ch;
+          return `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`;
+        });
+        analysisResult = analysisResultSchema.parse(JSON.parse(repaired));
+      } catch (parseError) {
+        throw new Error(
+          `Failed to parse analysis: ${parseError instanceof Error ? parseError.message : "Invalid format"}`
+        );
+      }
     }
 
     jobManager.updateProgress(jobId, 0.9, "Saving analysis...");
