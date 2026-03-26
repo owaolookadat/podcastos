@@ -109,13 +109,16 @@ export function generateClipsEdl(
   filename: string
 ): string {
   let edl = `TITLE: ${episodeTitle} - Shortform Clips\nFCM: NON-DROP FRAME\n\n`;
+  let recordCursor = 0;
 
   clips.forEach((clip, i) => {
     const eventNum = String(i + 1).padStart(3, "0");
     const srcIn = toTimecode(clip.startTime);
     const srcOut = toTimecode(clip.endTime);
-    const recIn = toTimecode(0);
-    const recOut = toTimecode(clip.endTime - clip.startTime);
+    const clipDuration = clip.endTime - clip.startTime;
+    const recIn = toTimecode(recordCursor);
+    const recOut = toTimecode(recordCursor + clipDuration);
+    recordCursor += clipDuration;
 
     edl += `${eventNum}  ${filename} V     C        ${srcIn} ${srcOut} ${recIn} ${recOut}\n`;
     edl += `${eventNum}  ${filename} A     C        ${srcIn} ${srcOut} ${recIn} ${recOut}\n`;
